@@ -1,0 +1,18 @@
+{
+    "data": [
+        {
+            "chat_id": "4e32289e-ab71-4d0b-bf68-4ed99260125b",
+            "time_last_conversation": 1708591365,
+            "chat_history": [
+                {
+                    "role": "user",
+                    "content": "hello, how are you? This is Example 1"
+                },
+                {
+                    "role": "response",
+                    "content": "hello, i'm great"
+                }
+            ]
+        }
+    ]
+}

@@ -1,8 +1,10 @@
 """
 API Core for AI Customer Service System.
 
-This module serves as the main application for the API, constituting the core of the AI customer service system. 
-It is designed to facilitate communication between the dashboard and the underlying data and functionalities of the system.
+This module serves as the main application for the API, 
+constituting the core of the AI customer service system. 
+It is designed to facilitate communication between the 
+dashboard and the underlying data and functionalities of the system.
 
 Key Functions:
     - Interface with the dashboard: Enables data exchange for monitoring and management tasks.
@@ -10,17 +12,24 @@ Key Functions:
         leveraging its capabilities to process and understand customer queries effectively.
 
 Usage:
-    The API acts as a middleware, processing requests from the dashboard to access or modify data. 
-    It also handles the invocation of the LangChain submodule to generate AI responses based on the input data.
+    The API acts as a middleware, processing requests 
+    from the dashboard to access or modify data. 
+    It also handles the invocation of the LangChain 
+    submodule to generate AI responses based on the input data.
 
 Important:
-    Ensure that the LangChain submodule is correctly set up and configured to work seamlessly with this API. 
-    The integration is crucial for the effective functioning of the AI customer service system.
+    Ensure that the LangChain submodule is correctly set up 
+    and configured to work seamlessly with this API. 
+    The integration is crucial for the effective 
+    functioning of the AI customer service system.
 """
 
 import uuid
 
 from api_utils import check_package, validate_token, check_chat_length, get_current_time, save_conversation
+from langchain.langchain import langchain_main
+
+from genta import GentaAPI
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from utilities.utilities import EnvironmentVariables
@@ -29,7 +38,10 @@ from contextlib import asynccontextmanager
 env = EnvironmentVariables()
 
 # The file location of the database
-JSON_DATABASE_URL = ''
+JSON_DATABASE_URL = 'chat_history.json'
+
+# The token for dashboard communication
+DASHBOARD_TOKEN = env['DASHBOARD_TOKEN']
 
 # Chatbot token is the token generated to validate input from the website in which the customer service chatbot is implemented
 default_chatbot_token = ''
@@ -39,6 +51,10 @@ chatbot_active = True
 
 # Max chat size is the maximum user request, set default to 10 but can be changed in the dashboard
 max_chat_size = 10
+
+# Genta API for AI Inference purposes
+GENTA_API_KEY = env['GENTA_API_KEY']
+GENTA_API = GentaAPI(GENTA_API_KEY)
 
 @asynccontextmanager
 async def lifespan():
@@ -66,7 +82,7 @@ app.add_middleware(
 
 
 @app.post('/chatbot')
-async def chatbotAPI(request_data: dict):
+async def chatbot_api(request_data: dict):
     """
     Main function that handle the main chat from the website
 
@@ -74,7 +90,8 @@ async def chatbotAPI(request_data: dict):
     {
         chatbot_token: UUID,
         chatbot_session_id: UUID,
-        chat_history: [{'role': 'user', 'content':user_input}, {'role':'response', 'content': llm_output}]
+        chat_history: [{'role': 'user', 'content':user_input}, 
+                        {'role':'response', 'content': llm_output}]
     }
     """
 
@@ -101,15 +118,82 @@ async def chatbotAPI(request_data: dict):
         return HTTPException(status_code=206, detail="you have exceed the maximum chat limit")
 
     # Forward the data to the langchain part for inference
-    # TODO: Implement code to forward data to the langchain part for inference
+    builded_chat = langchain_main(chat_history)
 
     # Call Genta API
-    # TODO: Implement code to call Genta API
+    response = GENTA_API.ChatCompletion(builded_chat,
+                                        model_name='llama2-7b')
 
     # Update the JSON database for chat history
-    # TODO: Implement code to update the JSON database for chat history (Not yet updated)
     save_conversation(chatbot_session_id=chatbot_session_id,
                       chatbot_time=get_current_time,
                       chat_history=chat_history,
                       json_path=JSON_DATABASE_URL)
 
+    return response
+
+@app.post('/set_chat_token')
+def set_chat_token(input_token: str):
+    """
+    Generate a new chat token, only able to do it from the dashboard
+    """
+    if not validate_token(input_token, DASHBOARD_TOKEN):
+        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+
+    default_chatbot_token = uuid.uuid4()
+    return default_chatbot_token
+
+@app.post('/get_chat_token')
+def get_chat_token(input_token: str):
+    """
+    Return the chat token, only able to do it from the dashboard
+    """
+    if not validate_token(input_token, DASHBOARD_TOKEN):
+        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    
+    return default_chatbot_token
+
+@app.post('/chat_status')
+def chat_status():
+    """
+    Check if the chatbot is active
+    """
+    return chatbot_active
+
+@app.post('/chat_off')
+def chat_off(input_token: str):
+    """
+    Turn off the chat feature, only able to do it from the dashboard
+    """
+    if not validate_token(input_token, DASHBOARD_TOKEN):
+        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    chatbot_active = False
+    return chatbot_active
+
+@app.post('/chat_on')
+def chat_on(input_token: str):
+    """
+    Turn on the chat feature, only able to do it from the dashboard
+    """
+    if not validate_token(input_token, DASHBOARD_TOKEN):
+        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    chatbot_active = True
+    return chatbot_active
+
+@app.post('/chat_size')
+def chat_size():
+    """
+    Check the maximum chat size allowed
+    """
+    return chat_size
+
+@app.post('/chat_size_set')
+def chat_size_set(input_token: str, new_maximum_size: int):
+    """
+    Set the maximum chat size allowed, only able to do it from the dashboard
+    """
+    if not validate_token(input_token, DASHBOARD_TOKEN):
+        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    
+    chat_size = new_maximum_size
+    return chat_size

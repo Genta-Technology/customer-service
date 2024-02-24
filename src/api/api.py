@@ -26,11 +26,12 @@ Important:
 
 import uuid
 
-from api_utils import check_package, validate_token, check_chat_length, get_current_time, save_conversation
+from api.api_utils import check_package, validate_token, check_chat_length, get_current_time, save_conversation
 from langchain.langchain import langchain_main
 
 from genta import GentaAPI
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from utilities.utilities import EnvironmentVariables
 from contextlib import asynccontextmanager
@@ -105,17 +106,17 @@ async def chatbot_api(request_data: dict):
 
     # Check chatbot token
     if not validate_token(chatbot_token, default_chatbot_token):
-        return HTTPException(status_code=206, detail="chatbot_token is not valid")
+        raise HTTPException(status_code=206, detail="chatbot_token is not valid")
 
     # Check chatbot active
     if not chatbot_active:
-        return HTTPException(
+        raise HTTPException(
             status_code=206,
             detail="chatbot is currently unavailable/disabled, please contact your administrator")
 
     # Check total chat if its greater than the max value
     if not check_chat_length(chat_history, max_chat_size):
-        return HTTPException(status_code=206, detail="you have exceed the maximum chat limit")
+        raise HTTPException(status_code=206, detail="you have exceed the maximum chat limit")
 
     # Forward the data to the langchain part for inference
     builded_chat = langchain_main(chat_history)
@@ -133,67 +134,71 @@ async def chatbot_api(request_data: dict):
     return response
 
 @app.post('/set_chat_token')
-def set_chat_token(input_token: str):
+def set_chat_token(request_data: dict):
     """
     Generate a new chat token, only able to do it from the dashboard
     """
-    if not validate_token(input_token, DASHBOARD_TOKEN):
-        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    global default_chatbot_token
+
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
 
     default_chatbot_token = uuid.uuid4()
-    return default_chatbot_token
+    return JSONResponse(content={"chatbot_token": str(default_chatbot_token)})
 
 @app.post('/get_chat_token')
-def get_chat_token(input_token: str):
+def get_chat_token(request_data: dict):
     """
     Return the chat token, only able to do it from the dashboard
     """
-    if not validate_token(input_token, DASHBOARD_TOKEN):
-        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    global default_chatbot_token
     
-    return default_chatbot_token
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
+    
+    return JSONResponse(content={"chatbot_token": str(default_chatbot_token)})
 
 @app.post('/chat_status')
 def chat_status():
     """
     Check if the chatbot is active
     """
-    return chatbot_active
+    return JSONResponse(content={"chatbot_status": chatbot_active})
 
 @app.post('/chat_off')
-def chat_off(input_token: str):
+def chat_off(request_data: dict):
     """
     Turn off the chat feature, only able to do it from the dashboard
     """
-    if not validate_token(input_token, DASHBOARD_TOKEN):
-        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
     chatbot_active = False
-    return chatbot_active
+    return JSONResponse(content={"chatbot_status": chatbot_active})
 
 @app.post('/chat_on')
-def chat_on(input_token: str):
+def chat_on(request_data: dict):
     """
     Turn on the chat feature, only able to do it from the dashboard
     """
-    if not validate_token(input_token, DASHBOARD_TOKEN):
-        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
     chatbot_active = True
-    return chatbot_active
+    return JSONResponse(content={"chatbot_status": chatbot_active})
 
 @app.post('/chat_size')
 def chat_size():
     """
     Check the maximum chat size allowed
     """
-    return chat_size
+    raise JSONResponse(content={"chat_size": chat_size})
 
 @app.post('/chat_size_set')
-def chat_size_set(input_token: str, new_maximum_size: int):
+def chat_size_set(request_data: dict):
     """
     Set the maximum chat size allowed, only able to do it from the dashboard
     """
-    if not validate_token(input_token, DASHBOARD_TOKEN):
-        return HTTPException(status_code=206, detail="Dashboard token is not valid")
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
     
-    chat_size = new_maximum_size
-    return chat_size
+    chat_size = request_data.get('max_size')
+    return JSONResponse(content={"chat_size": chat_size})

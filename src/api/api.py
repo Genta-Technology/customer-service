@@ -58,15 +58,14 @@ GENTA_API_KEY = env['GENTA_API_KEY']
 GENTA_API = GentaAPI(GENTA_API_KEY)
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     '''
     Function that only run once while the API is starting
     '''
-
-    # Load database
-
     # Create Token for API Access
+    global default_chatbot_token
     default_chatbot_token = uuid.uuid4()
+    yield
 
 app = FastAPI(lifespan=lifespan)
 
@@ -105,7 +104,7 @@ async def chatbot_api(request_data: dict):
     chat_history = request_data.get('chat_history')
 
     # Check chatbot token
-    if not validate_token(chatbot_token, default_chatbot_token):
+    if not validate_token(chatbot_token, str(default_chatbot_token)):
         raise HTTPException(status_code=206, detail="chatbot_token is not valid")
 
     # Check chatbot active
@@ -123,15 +122,19 @@ async def chatbot_api(request_data: dict):
 
     # Call Genta API
     response = GENTA_API.ChatCompletion(builded_chat,
-                                        model_name='llama2-7b')
+                                        model_name='OpenChat-7B')
+    
+    # Append the response
+    answer = {'role': 'assistant', 'content': response[0][0][0]['generated_text']}
+    chat_history.append(answer)
 
     # Update the JSON database for chat history
     save_conversation(chatbot_session_id=chatbot_session_id,
-                      chatbot_time=get_current_time,
+                      chatbot_time=get_current_time(),
                       chat_history=chat_history,
                       json_path=JSON_DATABASE_URL)
 
-    return response
+    return chat_history
 
 @app.post('/set_chat_token')
 def set_chat_token(request_data: dict):

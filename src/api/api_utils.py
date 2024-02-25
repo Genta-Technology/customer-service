@@ -43,8 +43,7 @@ def check_chat_length(chat_history: list, max_size: int):
     Returns:
     - bool: True if the total length of chat messages is less than 'max_size', False otherwise.
     """
-    total_length = sum(len(message['message']) for message in chat_history
-                       if message.get('role') == 'user')
+    total_length = len([message for message in chat_history if message.get('role') == 'user'])
 
     return total_length <= max_size
 
@@ -80,10 +79,10 @@ def save_conversation(chatbot_session_id: str,
                                 in enumerate(data['data'])
                                 if d["chat_id"] == chatbot_session_id), None)
     if existing_chat_index is not None:
-        del data['chats'][existing_chat_index]
+        del data['data'][existing_chat_index]
 
     # Append or update the chat in the 'chats' list
-    data['chats'].append({
+    data['data'].append({
         'chat_id': chatbot_session_id,
         'time_last_conversation': chatbot_time,
         'chat_history': chat_history

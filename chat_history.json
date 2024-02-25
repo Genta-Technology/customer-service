@@ -13,6 +13,34 @@
                     "content": "hello, i'm great"
                 }
             ]
+        },
+        {
+            "chat_id": "8aa83559-23f3-4372-955b-6f2721155d18",
+            "time_last_conversation": 1708836365,
+            "chat_history": [
+                {
+                    "role": "user",
+                    "content": "How much does a car cost?"
+                },
+                {
+                    "role": "assistant",
+                    "content": "\nThe cost of a car varies greatly depending on the make, model, and year. Prices can range from a few thousand dollars for an older used car to hundreds of thousands of dollars for luxury and high-performance vehicles. It's also important to consider additional costs such as taxes, registration fees, and insurance when purchasing a car. Therefore, it's not possible to provide a specific cost without more information about the type of car you are interested in."
+                }
+            ]
+        },
+        {
+            "chat_id": "ee3602ec-1a68-44ab-a8f2-a4ffc6f5c86c",
+            "time_last_conversation": 1708836380,
+            "chat_history": [
+                {
+                    "role": "user",
+                    "content": "How much does a car cost?"
+                },
+                {
+                    "role": "assistant",
+                    "content": "\nThe cost of a car can vary greatly depending on the make, model, and year. On average, new cars in the United States cost around $37,000. However, this is just an average and prices can range from a few thousand dollars for an older used car to over $100,000 for a luxury vehicle. It's important to do some research and compare prices from different dealerships or private sellers to get an idea of how much a specific car might cost."
+                }
+            ]
         }
     ]
 }

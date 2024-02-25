@@ -192,7 +192,8 @@ def chat_size():
     """
     Check the maximum chat size allowed
     """
-    return JSONResponse(content={"chat_size": chat_size})
+    global max_chat_size
+    return JSONResponse(content={"chat_size": max_chat_size})
 
 @app.post('/chat_size_set')
 def chat_size_set(request_data: dict):
@@ -202,5 +203,6 @@ def chat_size_set(request_data: dict):
     if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
         raise HTTPException(status_code=206, detail="Dashboard token is not valid")
     
-    chat_size = request_data.get('max_size')
-    return JSONResponse(content={"chat_size": chat_size})
+    global max_chat_size
+    max_chat_size = request_data.get('max_size')
+    return JSONResponse(content={"chat_size": max_chat_size})

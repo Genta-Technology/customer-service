@@ -21,6 +21,17 @@ Prerequisites:
 - Streamlit
 - Dependencies listed in requirements.txt
 
+NOTES FOR API Developers:
+
+    Session state dashboard:
+    {
+        "password": str (unhashed)
+        "chat_limit":int
+        "messages": list
+        "stop_bot": str: "true" or "false"
+        "username": str
+    }
+
 Note:
 Ensure API communication with the intended website and LangChain for RAG
 (Retrieval-Augmented Generation) are properly configured for seamless integration.
@@ -76,7 +87,7 @@ PAGE_CONFIG = {"page_title": "Chat Dashboard", "page_icon": "./genta_logo.png"}
 st.set_page_config(**PAGE_CONFIG)
 
 with st.sidebar:
-    st.subheader("Control Panel")
+    st.title("Control Panel")
     col1, col2, col3 = st.columns(3)
     with col2:
         st.image(logo, use_column_width="always")
@@ -84,26 +95,21 @@ with st.sidebar:
     genta_username = st.text_input("username", key="username", type="default")
     genta_password = st.text_input("password", key="password", type="password")
     if verify(genta_username, genta_password):
-        stop_button_placeholder, delete_button_placeholder, edit_button_placeholder = st.columns(3)
+        stop_button_placeholder, start_button_placeholder = st.columns(2)
         
         with stop_button_placeholder: 
             stop_button = st.button("stop bot", type="primary")
-            start_button = st.button("start bot")
-            if start_button:
-                st.session_state.stop_bot = "false"
             if stop_button:
                 st.session_state.stop_bot = "true"
                 
-        with delete_button_placeholder: 
-            delete_button = st.button("delete last response",
-                      type="secondary")
-            if delete_button:
-                delete_last_response()
-        with edit_button_placeholder:
-            edit_button = st.button("edit last response",
-                                    type="secondary")
-            if edit_button:
-                edit_last_message()
+        with start_button_placeholder: 
+            start_button = st.button("start bot")
+            if start_button:
+                st.session_state.stop_bot = "false"
+        
+        # set chat token here
+        st.number_input("Chat Limit", key="chat_limit", min_value=0, max_value=30, step=1)
+        
         advanced = st.toggle("Advanced Mode")
         if advanced:
             temperature = st.slider(
@@ -143,4 +149,3 @@ for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 st.write(st.session_state)
-st.write(verify(st.session_state.username, st.session_state.password))

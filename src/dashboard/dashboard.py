@@ -1,8 +1,47 @@
+"""
+Streamlit-based Dashboard for AI Customer Service Monitoring.
+
+This module implements a dashboard using Streamlit for monitoring and managing
+an AI customer service system. It provides real-time oversight and interaction
+capabilities for chat service administrators and managers.
+
+Features:
+- Chat Monitoring: View live customer-AI interactions for quality assurance.
+- Message Management: Delete or modify messages for error correction.
+- Analytics Dashboard: Access usage patterns and performance metrics.
+- Secure Login: Restrict dashboard access to authorized personnel.
+
+Getting Started:
+To run the dashboard, ensure Streamlit is installed and execute:
+`streamlit run dashboard.py`
+Login is required for access.
+
+Prerequisites:
+- Python 3.x
+- Streamlit
+- Dependencies listed in requirements.txt
+
+Note:
+Ensure API communication with the intended website and LangChain for RAG
+(Retrieval-Augmented Generation) are properly configured for seamless integration.
+"""
+
 import streamlit as st 
-import numpy as np
 from PIL import Image
-import streamlit_authenticator as sa
-from main import verify
+
+def verify(username:str, password:str) -> bool:
+    """Dummy API
+
+    Args:
+        username (str): username to be checked
+        password (str): password to be checked
+
+    Returns:
+        bool: True if verified, else False
+    """
+    
+    # call database check here
+    return True if username == "genta" and password == "genta0" else False
 
 def fetch_message_database(username:str, password:str):
     if verify(username, password):
@@ -15,52 +54,93 @@ def fetch_message_database(username:str, password:str):
                          {'role':'response', 'content': "API output 01"}]
     }
     else:
-        return {}
+        return {"chat_history": []}
 
 def delete_last_response():
-    if "messages" in st.session_state and st.session_state.messages[-1]['role'] == "response":
-            # also delete the response in database here
-            st.session_state.messages = st.session_state.messages[:-1]
+    if  "messages" in st.session_state and st.session_state.messages and st.session_state.messages[-1]["role"] == "response":
+        # also delete the response in database here 
+        st.session_state.messages = st.session_state.messages[:-1]
     else:
-        st.toggle(":red[sorry last message is not from Genta]")
+        st.warning("cannot delete last message")
 
-with st.sidebar():
-    stop_button, delete_button, edit_button = st.columns(3)
-        
-    with stop_button: 
-        st.button("stop bot", type="primary")
-    with delete_button: 
-        st.button("edit last response",
-                    type="secondary",
-                    on_click=delete_last_response())
-        
-    advanced = st.toggle("Advanced Mode")
-    if advanced:
-        temperature = st.slider(
-            ':blue[Temperature]',
-            0.0, 2.0, 1.0)
-        
-        # Set the model max token to be generated
-        max_length = st.slider(
-            ":blue[Maximum lenght]",
-            0, 4096, 2048
-        )
+def edit_last_message():
+    if  "messages" in st.session_state and st.session_state.messages and st.session_state.messages[-1]["role"] == "response":
+        st.session_state.messages[-1]["content"] = st.chat_input()
+    else:
+        st.warning("cannot edit last message")
 
-        # Set the model top P value
-        top_p = st.slider(
-            ":blue[Top P]",
-            0.0, 0.1, 0.95
-        )
+logo = Image.open("./genta_logo.png")
 
-        # Set the model repetition penalty
-        rep_penalty = st.slider(
-            ":blue[Repetition penalty]",
-            0.0, 2.0, 1.03
-        )
-if "messages" not in st.session_state:
-    #st.session_state["messages"] = [{"role": "assistant", "content": "Ini adalah chat dari genta API"}]
+PAGE_CONFIG = {"page_title": "Chat Dashboard", "page_icon": "./genta_logo.png"}
+
+st.set_page_config(**PAGE_CONFIG)
+
+with st.sidebar:
+    st.subheader("Control Panel")
+    col1, col2, col3 = st.columns(3)
+    with col2:
+        st.image(logo, use_column_width="always")
     
-        st.session_state["messages"] = fetch_message_database(genta_username, genta_password)["chat_history"]
+    genta_username = st.text_input("username", key="username", type="default")
+    genta_password = st.text_input("password", key="password", type="password")
+    if verify(genta_username, genta_password):
+        stop_button_placeholder, delete_button_placeholder, edit_button_placeholder = st.columns(3)
+        
+        with stop_button_placeholder: 
+            stop_button = st.button("stop bot", type="primary")
+            start_button = st.button("start bot")
+            if start_button:
+                st.session_state.stop_bot = "false"
+            if stop_button:
+                st.session_state.stop_bot = "true"
+                
+        with delete_button_placeholder: 
+            delete_button = st.button("delete last response",
+                      type="secondary")
+            if delete_button:
+                delete_last_response()
+        with edit_button_placeholder:
+            edit_button = st.button("edit last response",
+                                    type="secondary")
+            if edit_button:
+                edit_last_message()
+        advanced = st.toggle("Advanced Mode")
+        if advanced:
+            temperature = st.slider(
+                ':blue[Temperature]',
+                0.0, 2.0, 1.0)
+            
+            # Set the model max token to be generated
+            max_length = st.slider(
+                ":blue[Maximum lenght]",
+                0, 4096, 2048
+            )
+
+            # Set the model top P value
+            top_p = st.slider(
+                ":blue[Top P]",
+                0.0, 0.1, 0.95
+            )
+
+            # Set the model repetition penalty
+            rep_penalty = st.slider(
+                ":blue[Repetition penalty]",
+                0.0, 2.0, 1.03
+            )
+    elif genta_username and genta_password:
+        st.caption(":red[Wrong username or password]")
+
+st.title("Genta Social Media API Manager")
+st.caption("Manage your social media account with Genta Technology")
+
+if "messages" not in st.session_state :
+    st.session_state["messages"] = fetch_message_database(genta_username, genta_password)["chat_history"]
+
+if "stop_bot" not in st.session_state:
+    st.session_state["stop_bot"] = "false"
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
+
+st.write(st.session_state)
+st.write(verify(st.session_state.username, st.session_state.password))

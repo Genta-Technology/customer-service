@@ -43,3 +43,27 @@ def test_new_chat_token(client):
 
     # Compare the chat token
     assert old_chat_token != new_chat_token
+
+def test_chat_status(client):
+    """
+    Test the chat status: /chat_status, /chat_off, /chat_on
+    """
+
+    response_current_status = client.post('/chat_status')
+    # Check that the chat default is set to ON (True)
+    assert response_current_status.status_code == 200
+    assert response_current_status.json()['chatbot_status'] == True
+
+    # Test turn off
+    client.post('/chat_off', json={'dashboard_token': DASHBOARD_TOKEN})
+    response_off_status = client.post('/chat_status')
+    # Check that the chat default is set to ON (True)
+    assert response_off_status.status_code == 200
+    assert response_off_status.json()['chatbot_status'] == False
+
+    # Test turn on
+    client.post('/chat_on', json={'dashboard_token': DASHBOARD_TOKEN})
+    response_on_status = client.post('/chat_status')
+    # Check that the chat default is set to ON (True)
+    assert response_on_status.status_code == 200
+    assert response_on_status.json()['chatbot_status'] == True

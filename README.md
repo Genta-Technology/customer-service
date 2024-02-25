@@ -2,4 +2,4 @@
 open-source AI based customer service management service with Genta API
 
 # Run the app
-streamlit run src\dashboard\dashboard.py
+streamlit run main.py

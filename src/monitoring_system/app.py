@@ -39,9 +39,9 @@ Ensure API communication with the intended website and LangChain for RAG
 
 import streamlit as st 
 
-from monitoring_system.dashboard import dashboard_page
-from monitoring_system.login import login_page
-from monitoring_system.chats import chats_page
+from src.monitoring_system.dashboard import dashboard_page
+from src.monitoring_system.login import login_page
+from src.monitoring_system.chats import chats_page
 
 # Initialize session state
 if 'authenticated' not in st.session_state:

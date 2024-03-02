@@ -2,105 +2,76 @@
 This is the main file for the dashboard menu
 """
 
-import streamlit as st 
-from PIL import Image
+import streamlit as st
 import os
 
-#def dashboard_page():
-"""
-Main dashboard page
-"""
-logo = Image.open("genta_logo.png")
-
-PAGE_CONFIG = {"page_title": "GentaChat", "page_icon": "genta_logo.png"}
-
-#st.set_page_config(page_icon="./genta_logo.png")
-st.title('Dashboard')
-st.write('Welcome to the dashboard!')
-
-def fetch_message_database(g_usr, g_password):
-    """test data
-
-    Args:
-        g_usr (_type_): _description_
-        g_password (_type_): _description_
-
-    Returns:
-        _type_: _description_
+def dashboard_page():
     """
-    return [{"chatbot_token": "0001", 
-             "chatbot_session_id": "XXXX",
-             "chat_history": [{'role': 'user', 'content':"input 1"}, 
-                              {'role':'response', 'content': "output 1"}]},
-            {"chatbot_token": "0002", 
-             "chatbot_session_id": "ADFGADF",
-             "chat_history": [{'role': 'user', 'content':"input 1"}, 
-                              {'role':'response', 'content': "output 1"}]},]
+    Main dashboard page
+    """
+    #st.set_page_config(page_icon="./genta_logo.png")
+    st.title('Dashboard')
+    st.write('Welcome to the dashboard!')
 
-with st.sidebar:
+    # Dashboard stuff (graph, etc put here)
+
     st.title("Control Panel")
+    # Bot Status Control Panel
+
     col1, col2, col3 = st.columns(3)
-    with col2:
-        st.image(logo, use_column_width="always")
-    stop_button_placeholder, start_button_placeholder = st.columns(2)
 
-    with stop_button_placeholder: 
-        stop_button = st.button("stop bot", type="primary")
-        if stop_button:
+    # Col 1, turn off bot button
+    with col1:
+        bot_stop_button = st.button("stop bot", type="primary")
+        if bot_stop_button:
             st.session_state.stop_bot = "true"
-        
-    with start_button_placeholder: 
-        start_button = st.button("start bot")
-        if start_button:
+            # Call the API to stop the Bot Activity and refresh
+    
+    # Col 2, bot status
+    with col2:
+        # Call API for Bot Status
+        bot_status = True
+
+        # Display the bot status
+        display_status(bot_status)
+
+    # Col 3, turn on bot button
+    with col3:
+        bot_start_button = st.button("start bot", type="primary")
+        if bot_start_button:
             st.session_state.stop_bot = "false"
+            # Call the API to stop the Bot Activity and refresh
+    
+    # Set max chat size
+    chat_size = 10 # Call API for chat size
+    chat_size_setting = st.number_input("Chat Limit", key="chat_limit", value=chat_size, min_value=5, max_value=100, step=1)
 
-    # set chat token here
-    st.number_input("Chat Limit", key="chat_limit", min_value=0, max_value=30, step=1)
-    
-    advanced = st.toggle("Advanced Mode")
-    if advanced:
-        temperature = st.slider(
-            ':blue[Temperature]',
-            0.0, 2.0, 1.0)
-    
-        # Set the model max token to be generated
-        max_length = st.slider(
-            ":blue[Maximum lenght]",
-            0, 4096, 2048
-        )
-        # Set the model top P value
-        top_p = st.slider(
-            ":blue[Top P]",
-            0.0, 0.1, 0.95
-        )
-        # Set the model repetition penalty
-        rep_penalty = st.slider(
-            ":blue[Repetition penalty]",
-            0.0, 2.0, 1.03
-        )
-        
-st.title("Genta Social Media API Manager")
-st.caption("Manage your social media account with Genta Technology")
+    if chat_size_setting != chat_size:
+        # Update the API for change in chat size and then refresh the page
+        pass
 
-if "messages" not in st.session_state :
-    st.session_state["messages"] = fetch_message_database('admin', 'test')
-    
-if "stop_bot" not in st.session_state:
-    st.session_state["stop_bot"] = "false"
-    
-for msg in st.session_state.messages:
-    with st.container():
-        total_keys = len(list(msg.keys()))-1
-        list_of_cols = st.columns(total_keys)
-        for i in range(total_keys):
-            with list_of_cols[i]:
-                st.write(msg[list(msg.keys())[i]])
-        with st.expander("show messages"):
-            col1_chat, col2_chat = st.columns(2)
-            with col1_chat:
-                st.button("delete last message", key=msg["chatbot_session_id"]+"delete", type="primary")
-            with col2_chat:
-                st.button("edit last message", key=msg["chatbot_session_id"]+"replace", type="secondary")
-            for ch in msg["chat_history"]:
-                st.chat_message(ch["role"]).write(ch["content"])
+    st.title("Chatbot Panel")
+    # Control panel to adjust the bot prompt and temperature
 
+    # Prompt
+    current_prompt = "Prompt 1" # Call API for current prompt
+    input_prompt = st.text_area(label="Chatbot Prompt:",value=current_prompt)
+
+    if input_prompt != current_prompt:
+        print("hehe")
+
+def display_status(status: bool):
+    """
+    Function to display a colored rectangle based on the status
+    """
+    color = "green" if status else "red"
+    st.markdown(f"""
+        <style>
+        .rectangle {{
+            width: 100px;
+            height: 50px;
+            background-color: {color};
+        }}
+        </style>
+        <div class="rectangle"></div>
+        """, unsafe_allow_html=True)

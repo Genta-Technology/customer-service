@@ -41,6 +41,20 @@
                     "content": "\nThe cost of a car can vary greatly depending on the make, model, and year. On average, new cars in the United States cost around $37,000. However, this is just an average and prices can range from a few thousand dollars for an older used car to over $100,000 for a luxury vehicle. It's important to do some research and compare prices from different dealerships or private sellers to get an idea of how much a specific car might cost."
                 }
             ]
+        },
+        {
+            "chat_id": "ab19e03b-6772-48ae-a6de-a4f60847b907",
+            "time_last_conversation": 1709634947,
+            "chat_history": [
+                {
+                    "role": "user",
+                    "content": "How much does a car cost?"
+                },
+                {
+                    "role": "assistant",
+                    "content": "\nThe cost of a car can vary greatly depending on the make, model, and features. On average, a new car in the United States costs around $38,000. However, this price can range from as low as $15,000 for an economy vehicle to over $150,00 for a high-end luxury car. It's important to research and compare prices from various dealerships and online sources to get the best possible deal on your desired vehicle."
+                }
+            ]
         }
     ]
 }

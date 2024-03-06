@@ -57,8 +57,20 @@ def dashboard_page():
     current_prompt = "Prompt 1" # Call API for current prompt
     input_prompt = st.text_area(label="Chatbot Prompt:",value=current_prompt)
 
+    # Set the model temperature
+    temperature = st.slider(
+        ':blue[Temperature]',
+        0.0, 2.0, 1.0)
+        
+    # Set the model max token to be generated
+    max_length = st.slider(
+        ":blue[Maximum lenght]",
+        0, 4096, 2048
+    )
+
     if input_prompt != current_prompt:
-        print("hehe")
+        # Update the database
+        pass
 
 def display_status(status: bool):
     """

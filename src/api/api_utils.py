@@ -91,3 +91,18 @@ def save_conversation(chatbot_session_id: str,
     # Write the updated content back to the JSON file
     with open(json_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4)
+
+def get_system(json_path: str):
+    """
+    Read the JSON file and search the system for the AI
+
+    Return a string of the AI system
+    """
+
+    with open(json_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    
+    if 'system' not in data:
+        data['system'] = "you are a helpful assistant"
+    
+    return data['system']

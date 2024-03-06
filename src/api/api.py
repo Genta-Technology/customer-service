@@ -26,7 +26,7 @@ Important:
 
 import uuid
 
-from api.api_utils import check_package, validate_token, check_chat_length, get_current_time, save_conversation
+from api.api_utils import check_package, validate_token, check_chat_length, get_current_time, save_conversation, get_system
 from langchain.langchain import langchain_main
 
 from genta import GentaAPI
@@ -52,6 +52,12 @@ chatbot_active = True
 
 # Max chat size is the maximum user request, set default to 10 but can be changed in the dashboard
 max_chat_size = 10
+
+# Chatbot temperature, set default to 1 but can be changed in the dashboard
+chatbot_temperature = 1.0
+
+# Chatbot max token generation, set default to 512 but can be changed in the dashboard
+chatbot_max_token = 512
 
 # Genta API for AI Inference purposes
 GENTA_API_KEY = env['GENTA_API_KEY']
@@ -117,12 +123,17 @@ async def chatbot_api(request_data: dict):
     if not check_chat_length(chat_history, max_chat_size):
         raise HTTPException(status_code=206, detail="you have exceed the maximum chat limit")
 
+    # Get Prompt from database
+    system = get_system(json_path=JSON_DATABASE_URL)
+
     # Forward the data to the langchain part for inference
-    builded_chat = langchain_main(chat_history)
+    builded_chat = langchain_main(chat_history, system)
 
     # Call Genta API
     response = GENTA_API.ChatCompletion(builded_chat,
-                                        model_name='OpenChat-7B')
+                                        model_name='OpenChat-7B',
+                                        temperature=chatbot_temperature,
+                                        max_new_tokens=chatbot_max_token)
     
     # Append the response
     answer = {'role': 'assistant', 'content': response[0][0][0]['generated_text']}
@@ -134,7 +145,7 @@ async def chatbot_api(request_data: dict):
                       chat_history=chat_history,
                       json_path=JSON_DATABASE_URL)
 
-    return chat_history
+    return {"updated_chat":chat_history}
 
 @app.post('/set_chat_token')
 def set_chat_token(request_data: dict):
@@ -208,4 +219,42 @@ def chat_size_set(request_data: dict):
     
     global max_chat_size
     max_chat_size = request_data.get('max_size')
+
     return JSONResponse(content={"chat_size": max_chat_size})
+
+@app.post('/chat_parameter')
+def chat_parameter(request_data: dict):
+    """
+    Check the current model parameter
+    """
+
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
+    
+    global chatbot_temperature
+    global chatbot_max_token
+
+    # print(chatbot_temperature)
+    # print(chatbot_max_token)
+
+    return JSONResponse(content={"temperature": chatbot_temperature, "max_token":chatbot_max_token})
+
+@app.post('/chat_parameter_set')
+def chat_parameter_set(request_data: dict):
+    """
+    Change the current model parameter
+    """
+
+    if not validate_token(request_data.get('dashboard_token'), DASHBOARD_TOKEN):
+        raise HTTPException(status_code=206, detail="Dashboard token is not valid")
+
+    global chatbot_temperature
+    global chatbot_max_token
+
+    # print(chatbot_temperature)
+    # print(chatbot_max_token)
+    
+    chatbot_temperature = request_data.get('temperature', chatbot_temperature)
+    chatbot_max_token = request_data.get('max_token', chatbot_max_token)
+
+    return JSONResponse(content={"temperature": chatbot_temperature, "max_token":chatbot_max_token})

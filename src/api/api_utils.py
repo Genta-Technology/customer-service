@@ -18,11 +18,11 @@ def check_package(request_data: dict):
     """
 
     if request_data.get('chatbot_token') is None:
-        return HTTPException(status_code=206, detail="chatbot_token is not provided")
+        raise HTTPException(status_code=206, detail="chatbot_token is not provided")
     if request_data.get('chatbot_session_id') is None:
-        return HTTPException(status_code=206, detail="chatbot_session_id is not provided")
+        raise HTTPException(status_code=206, detail="chatbot_session_id is not provided")
     if request_data.get('chat_history') is None:
-        return HTTPException(status_code=206, detail="chat_history is not provided")
+        raise HTTPException(status_code=206, detail="chat_history is not provided")
 
 
 def validate_token(input_token: str, default_token: str):
@@ -46,6 +46,7 @@ def check_chat_length(chat_history: list, max_size: int):
     total_length = len([message for message in chat_history if message.get('role') == 'user'])
 
     return total_length <= max_size
+
 
 def get_current_time():
     """
@@ -92,6 +93,7 @@ def save_conversation(chatbot_session_id: str,
     with open(json_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4)
 
+
 def get_system(json_path: str):
     """
     Read the JSON file and search the system for the AI
@@ -101,8 +103,8 @@ def get_system(json_path: str):
 
     with open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
-    
+
     if 'system' not in data:
         data['system'] = "you are a helpful assistant"
-    
+
     return data['system']

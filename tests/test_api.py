@@ -22,7 +22,7 @@ def client():
     return TestClient(app)
 
 
-def test_new_chat_token(client):
+def test_new_chat_token():
     """
     Test the /set_chat_token and /get_chat_token
     """
@@ -51,7 +51,7 @@ def test_new_chat_token(client):
     assert old_chat_token != new_chat_token
 
 
-def test_chat_status(client):
+def test_chat_status():
     """
     Test the chat status: /chat_status, /chat_off, /chat_on
     """
@@ -76,7 +76,7 @@ def test_chat_status(client):
     assert response_on_status.json()['chatbot_status'] == True
 
 
-def test_chat_size(client):
+def test_chat_size():
     """
     Test get the chat size by calling /chat_size and set the chat size by /chat_size_set
     """

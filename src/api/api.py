@@ -27,7 +27,7 @@ Important:
 import uuid
 
 from api.api_utils import check_package, validate_token, check_chat_length, get_current_time, save_conversation, get_system
-from langchain.langchain import langchain_main
+from rag.rag import rag_main
 
 from genta import GentaAPI
 from fastapi import FastAPI, HTTPException
@@ -126,8 +126,8 @@ async def chatbot_api(request_data: dict):
     # Get Prompt from database
     system = get_system(json_path=JSON_DATABASE_URL)
 
-    # Forward the data to the langchain part for inference
-    builded_chat = langchain_main(chat_history, system)
+    # Forward the data to the rag part for inference
+    builded_chat = rag_main(chat_history, system)
 
     # Call Genta API
     response = GENTA_API.ChatCompletion(builded_chat,
